@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbase Integration</title>
+    <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3f37c9;
+            --success: #4cc9f0;
+            --danger: #f72585;
+            --warning: #f8961e;
+            --info: #4895ef;
+            --light: #f8f9fa;
+            --dark: #212529;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        h1 {
+            color: var(--primary);
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .panel {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .panel-title {
+            font-size: 1.5rem;
+            color: var(--secondary);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        
+        input, textarea, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .file-upload {
+            margin: 15px 0;
+        }
+        
+        button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+            margin-right: 10px;
+        }
+        
+        button:hover {
+            background-color: var(--secondary);
+        }
+        
+        .message-box {
+            height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            margin-bottom: 15px;
+            background-color: #fafafa;
+        }
+        
+        .message {
+            margin-bottom: 15px;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        
+        .user-message {
+            background-color: #e3f2fd;
+            margin-left: 20%;
+            text-align: right;
+        }
+        
+        .bot-message {
+            background-color: #f1f8e9;
+            margin-right: 20%;
+        }
+        
+        .system-message {
+            background-color: #f5f5f5;
+            text-align: center;
+            font-style: italic;
+        }
+        
+        .history-message {
+            margin-bottom: 10px;
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .user-history {
+            color: var(--primary);
+        }
+        
+        .bot-history {
+            color: var(--success);
+        }
+        
+        .summary-history {
+            color: var(--info);
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(0,0,0,.1);
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+            vertical-align: middle;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .error-box {
+            background-color: #ffebee;
+            color: var(--danger);
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            border-left: 4px solid var(--danger);
+        }
+        
+        .info-box {
+            background-color: #e3f2fd;
+            color: var(--info);
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            border-left: 4px solid var(--info);
+        }
+        
+        .conversation {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #eee;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+        }
+        
+        .conversation-header {
+            font-weight: bold;
+            color: var(--dark);
+            margin-bottom: 5px;
+        }
+        
+        .conversation-date {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+        }
+        
+        .debug-pre {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-family: monospace;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        
+        .tab-container {
+            display: flex;
+            margin-bottom: 20px;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            background-color: #eee;
+            border: none;
+            border-radius: 4px 4px 0 0;
+            margin-right: 5px;
+        }
+        
+        .tab.active {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .conversation-info {
+            background-color: #e8f4f8;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+        
+        .summary-item {
+            background-color: #e8f5e9;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+        
+        .summary-text {
+            font-style: italic;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Chatbase Integration</h1>
+        
+        <div class="conversation-info">
+            <p>Current Conversation ID: <strong id="conversation-id-display">None</strong></p>
+            <button onclick="startNewConversation()">New Conversation</button>
+            <button onclick="listConversations()">List Conversations</button>
+            <button onclick="summarizeConversation()">Summarize Conversation</button>
+        </div>
+        
+        <div class="tab-container">
+            <button class="tab active" onclick="openTab('chat')">Chat</button>
+            <button class="tab" onclick="openTab('summarize')">Summarize</button>
+            <button class="tab" onclick="openTab('history')">History</button>
+            <button class="tab" onclick="openTab('summaries')">Summaries</button>
+        </div>
+        
+        <div id="chat" class="tab-content active">
+            <div class="panel">
+                <h2 class="panel-title">Chat with AI</h2>
+                <div id="chat-box" class="message-box"></div>
+                <div class="form-group">
+                    <label for="message">Your Message</label>
+                    <input type="text" id="message" placeholder="Type your message...">
+                </div>
+                <div class="form-group">
+                    <label for="model">AI Model</label>
+                    <select id="model">
+                        <option value="">Default</option>
+                        <option value="gpt-4">GPT-4</option>
+                        <option value="gpt-4-turbo">GPT-4 Turbo</option>
+                        <option value="gpt-4o">GPT-4o</option>
+                        <option value="claude-3-opus">Claude 3 Opus</option>
+                        <option value="claude-3-sonnet">Claude 3 Sonnet</option>
+                        <option value="claude-3-haiku">Claude 3 Haiku</option>
+                    </select>
+                </div>
+                <div class="file-upload">
+                    <label for="fileInput">Upload File (TXT, DOCX, PDF)</label>
+                    <input type="file" id="fileInput" accept=".txt,.docx,.pdf">
+                </div>
+                <button onclick="sendMessage()">Send Message</button>
+            </div>
+        </div>
+        
+        <div id="summarize" class="tab-content">
+            <div class="panel">
+                <h2 class="panel-title">Text Summarization</h2>
+                <div id="summary-box" class="message-box"></div>
+                <div class="form-group">
+                    <label for="summaryText">Text to Summarize</label>
+                    <textarea id="summaryText" placeholder="Paste text here..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="summaryModel">Model</label>
+                    <select id="summaryModel">
+                        <option value="gpt-4">GPT-4</option>
+                        <option value="gpt-4-turbo">GPT-4 Turbo</option>
+                        <option value="claude-3-opus">Claude 3 Opus</option>
+                    </select>
+                </div>
+                <div class="file-upload">
+                    <label for="summaryFileInput">Or Upload File</label>
+                    <input type="file" id="summaryFileInput" accept=".txt,.docx,.pdf">
+                </div>
+                <button onclick="summarizeText()">Summarize</button>
+            </div>
+        </div>
+        
+        <div id="history" class="tab-content">
+            <div class="panel">
+                <h2 class="panel-title">Chat History</h2>
+                <div id="history-box" class="message-box"></div>
+                <div class="form-group">
+                    <label for="history-conversation-id">Conversation ID (optional)</label>
+                    <input type="text" id="history-conversation-id" placeholder="Leave blank for all conversations">
+                </div>
+                <div style="display: flex; gap: 15px; margin-bottom: 15px;">
+                    <div style="flex: 1;">
+                        <label for="start-date">Start Date</label>
+                        <input type="date" id="start-date">
+                    </div>
+                    <div style="flex: 1;">
+                        <label for="end-date">End Date</label>
+                        <input type="date" id="end-date">
+                    </div>
+                </div>
+                <button onclick="getHistory()">Get History</button>
+                <button onclick="continueConversation()">Continue This Conversation</button>
+            </div>
+        </div>
+        
+        <div id="summaries" class="tab-content">
+            <div class="panel">
+                <h2 class="panel-title">Conversation Summaries</h2>
+                <div id="summaries-box" class="message-box"></div>
+                <div class="form-group">
+                    <label for="summaries-conversation-id">Conversation ID (optional)</label>
+                    <input type="text" id="summaries-conversation-id" placeholder="Leave blank for all conversations">
+                </div>
+                <button onclick="getSummaries()">Get Summaries</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let currentConversationId = null;
+        
+        // Tab navigation
+        function openTab(tabName) {
+            const tabs = document.getElementsByClassName('tab');
+            const tabContents = document.getElementsByClassName('tab-content');
+            
+            for (let tab of tabs) {
+                tab.classList.remove('active');
+            }
+            
+            for (let content of tabContents) {
+                content.classList.remove('active');
+            }
+            
+            document.getElementById(tabName).classList.add('active');
+            event.currentTarget.classList.add('active');
+        }
+        
+        // Conversation management
+        function startNewConversation() {
+            fetch('/api/start-conversation', {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                currentConversationId = data.conversation_id;
+                document.getElementById('conversation-id-display').textContent = currentConversationId;
+                document.getElementById('chat-box').innerHTML = '';
+                addMessage(document.getElementById('chat-box'), 'system', 'Started new conversation');
+            })
+            .catch(error => {
+                showError(document.getElementById('chat-box'), 'Failed to start new conversation: ' + error.message);
+            });
+        }
+        
+        function listConversations() {
+            fetch('/conversations')
+            .then(response => response.json())
+            .then(data => {
+                const chatBox = document.getElementById('chat-box');
+                chatBox.innerHTML = '<div class="info-box"><h3>Available Conversations</h3>';
+                
+                if (data.conversations && data.conversations.length > 0) {
+                    data.conversations.forEach(conv => {
+                        chatBox.innerHTML += `
+                            <div class="conversation">
+                                <p><strong>ID:</strong> ${conv.id}</p>
+                                <p><strong>Created:</strong> ${new Date(conv.created_at).toLocaleString()}</p>
+                                <p><strong>Messages:</strong> ${conv.message_count}</p>
+                                <p><strong>Summaries:</strong> ${conv.summary_count}</p>
+                                <button onclick="loadConversation('${conv.id}')">Load</button>
+                            </div>
+                        `;
+                    });
+                } else {
+                    chatBox.innerHTML += '<p>No conversations found</p>';
+                }
+                
+                chatBox.innerHTML += '</div>';
+            })
+            .catch(error => {
+                showError(document.getElementById('chat-box'), 'Failed to list conversations: ' + error.message);
+            });
+        }
+        
+        function loadConversation(conversationId) {
+            fetch(`/history?conversation_id=${conversationId}`)
+            .then(response => response.json())
+            .then(data => {
+                currentConversationId = conversationId;
+                document.getElementById('conversation-id-display').textContent = currentConversationId;
+                
+                const chatBox = document.getElementById('chat-box');
+                chatBox.innerHTML = '';
+                
+                if (data.messages && data.messages.length > 0) {
+                    data.messages.forEach(msg => {
+                        addMessage(chatBox, msg.role, msg.content);
+                    });
+                } else {
+                    addMessage(chatBox, 'system', 'No messages in this conversation');
+                }
+                
+                // Switch to chat tab
+                document.querySelector('.tab').click();
+            })
+            .catch(error => {
+                showError(document.getElementById('chat-box'), 'Failed to load conversation: ' + error.message);
+            });
+        }
+        
+        function continueConversation() {
+            const conversationId = document.getElementById('history-conversation-id').value.trim();
+            if (!conversationId) {
+                showError(document.getElementById('history-box'), 'Please enter a conversation ID');
+                return;
+            }
+            
+            currentConversationId = conversationId;
+            document.getElementById('conversation-id-display').textContent = currentConversationId;
+            
+            // Switch to chat tab
+            document.querySelector('.tab').click();
+            
+            // Load the conversation messages
+            loadConversation(conversationId);
+        }
+        
+        // Chat functions
+        function sendMessage() {
+            const messageInput = document.getElementById("message");
+            const fileInput = document.getElementById("fileInput");
+            const modelInput = document.getElementById("model");
+            const chatBox = document.getElementById("chat-box");
+
+            const userMessage = messageInput.value.trim();
+            const file = fileInput.files[0];
+            const model = modelInput.value;
+
+            if (!userMessage && !file) {
+                showError(chatBox, "Please enter a message or upload a file.");
+                return;
+            }
+
+            if (userMessage) {
+                addMessage(chatBox, "user", userMessage);
+            }
+            if (file) {
+                addMessage(chatBox, "user", `Uploaded file: ${file.name}`);
+            }
+
+            messageInput.value = "";
+            fileInput.value = "";
+
+            const payload = {
+                message: userMessage,
+                conversation_id: currentConversationId,
+                model: model
+            };
+
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    payload.file = e.target.result.split(",")[1];
+                    payload.file_type = file.name.split(".").pop();
+
+                    callApi("/api", payload, chatBox, "bot");
+                };
+                reader.readAsDataURL(file);
+            } else {
+                callApi("/api", payload, chatBox, "bot");
+            }
+        }
+
+        // Summarization functions
+        function summarizeText() {
+            const summaryText = document.getElementById("summaryText");
+            const summaryFileInput = document.getElementById("summaryFileInput");
+            const summaryModelInput = document.getElementById("summaryModel");
+            const summaryBox = document.getElementById("summary-box");
+
+            const file = summaryFileInput.files[0];
+            const model = summaryModelInput.value;
+            const conversationId = currentConversationId;
+
+            if (!summaryText.value.trim() && !file) {
+                showError(summaryBox, "Please enter text or upload a file.");
+                return;
+            }
+
+            const payload = {
+                model: model,
+                conversation_id: conversationId
+            };
+
+            if (summaryText.value.trim()) {
+                payload.text = summaryText.value.trim();
+            }
+
+            if (file) {
+                const fileType = file.name.split(".").pop();
+                if (!["pdf", "txt", "docx"].includes(fileType)) {
+                    showError(summaryBox, "Unsupported file format. Only PDF, TXT, and DOCX are supported.");
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    payload.file = e.target.result.split(",")[1];
+                    payload.file_type = fileType;
+
+                    callApi("/summarize", payload, summaryBox, "summary");
+                };
+                reader.readAsDataURL(file);
+            } else {
+                callApi("/summarize", payload, summaryBox, "summary");
+            }
+        }
+        
+        function summarizeConversation() {
+            if (!currentConversationId) {
+                showError(document.getElementById('chat-box'), 'No active conversation');
+                return;
+            }
+
+            const chatBox = document.getElementById('chat-box');
+            const modelInput = document.getElementById('model');
+            const model = modelInput.value;
+
+            // Get the last few messages for context
+            const contextMessages = [];
+            const messageElements = chatBox.querySelectorAll('.message');
+            const lastMessages = Array.from(messageElements).slice(-5); // Get last 5 messages
+            
+            lastMessages.forEach(msg => {
+                const role = msg.classList.contains('user-message') ? 'user' : 
+                            msg.classList.contains('bot-message') ? 'assistant' : 'system';
+                const content = msg.textContent.replace(/^(You|Assistant|System):\s*/i, '');
+                contextMessages.push(`${role}: ${content}`);
+            });
+
+            const context = contextMessages.join('\n');
+            const prompt = `Summarize this conversation:\n${context}`;
+
+            addMessage(chatBox, 'user', 'Requested summary of recent conversation');
+            
+            const payload = {
+                text: prompt,
+                conversation_id: currentConversationId,
+                model: model
+            };
+
+            callApi("/summarize", payload, chatBox, "bot");
+        }
+
+        // History functions
+        function getHistory(conversationId = null) {
+            const historyBox = document.getElementById("history-box");
+            const startDateInput = document.getElementById("start-date");
+            const endDateInput = document.getElementById("end-date");
+            
+            if (!conversationId) {
+                conversationId = document.getElementById("history-conversation-id").value.trim() || null;
+            }
+            
+            const startDate = startDateInput.value;
+            const endDate = endDateInput.value;
+
+            historyBox.innerHTML = "<p>Loading history... <span class='loading'></span></p>";
+
+            let url = `/history?`;
+            if (conversationId) url += `conversation_id=${encodeURIComponent(conversationId)}&`;
+            if (startDate) url += `start_date=${startDate}&`;
+            if (endDate) url += `end_date=${endDate}&`;
+
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(err => {
+                            let errorHtml = `<div class="error-box">
+                                <h4>Error Loading History</h4>
+                                <p>${err.error || 'Unknown error occurred'}</p>`;
+                            
+                            if (err.debug) {
+                                errorHtml += `<p>Debug Info:</p>
+                                    <pre class="debug-pre">${JSON.stringify(err.debug, null, 2)}</pre>`;
+                            }
+                            
+                            errorHtml += `</div>`;
+                            throw new Error(errorHtml);
+                        });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.message === 'No conversations found') {
+                        let html = `<div class="info-box">
+                            <h4>No Conversations Found</h4>
+                            <p>Try adjusting your search parameters</p>`;
+                        
+                        if (data.params) {
+                            html += `<p>Search Parameters:</p>
+                                <ul>`;
+                            for (const [key, value] of Object.entries(data.params)) {
+                                if (value) html += `<li>${key}: ${value}</li>`;
+                            }
+                            html += `</ul>`;
+                        }
+                        
+                        html += `</div>`;
+                        historyBox.innerHTML = html;
+                        return;
+                    }
+
+                    if (!data.conversations || data.conversations.length === 0) {
+                        historyBox.innerHTML = `<div class="info-box">
+                            <p>No conversations in response</p>
+                            <pre class="debug-pre">${JSON.stringify(data, null, 2)}</pre>
+                        </div>`;
+                        return;
+                    }
+
+                    historyBox.innerHTML = "";
+                    data.conversations.forEach(conversation => {
+                        const convDiv = document.createElement("div");
+                        convDiv.className = "conversation";
+                        
+                        let header = `Conversation`;
+                        if (conversation.chatId || conversation.id) {
+                            header += ` ID: ${conversation.chatId || conversation.id}`;
+                        }
+                        if (conversation.createdAt) {
+                            header += ` - ${new Date(conversation.createdAt).toLocaleString()}`;
+                        }
+                        
+                        convDiv.innerHTML = `
+                            <div class="conversation-header">${header}</div>
+                            <div class="conversation-messages"></div>
+                        `;
+                        
+                        const messagesContainer = convDiv.querySelector(".conversation-messages");
+                        
+                        if (conversation.messages && conversation.messages.length > 0) {
+                            conversation.messages.forEach(msg => {
+                                const msgDiv = document.createElement("div");
+                                msgDiv.className = `history-message ${msg.role}-history`;
+                                if (msg.type === 'summary_request' || msg.type === 'summary_response') {
+                                    msgDiv.classList.add('summary-history');
+                                }
+                                msgDiv.innerHTML = `<strong>${msg.role}:</strong> ${msg.content}`;
+                                messagesContainer.appendChild(msgDiv);
+                            });
+                        } else {
+                            messagesContainer.innerHTML = `<p>No messages in this conversation</p>`;
+                        }
+                        
+                        historyBox.appendChild(convDiv);
+                    });
+                })
+                .catch(error => {
+                    historyBox.innerHTML = error.message;
+                });
+        }
+        
+        function getSummaries() {
+            const conversationId = document.getElementById("summaries-conversation-id").value.trim() || null;
+            const summariesBox = document.getElementById("summaries-box");
+            
+            summariesBox.innerHTML = "<p>Loading summaries... <span class='loading'></span></p>";
+            
+            let url = `/history?`;
+            if (conversationId) url += `conversation_id=${encodeURIComponent(conversationId)}&`;
+            
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.message === 'No conversations found') {
+                        summariesBox.innerHTML = `<div class="info-box">
+                            <p>No conversations found</p>
+                        </div>`;
+                        return;
+                    }
+                    
+                    summariesBox.innerHTML = "";
+                    
+                    const conversationsToShow = data.conversations || [data];
+                    
+                    conversationsToShow.forEach(conv => {
+                        if (!conv.summaries || conv.summaries.length === 0) return;
+                        
+                        const convDiv = document.createElement("div");
+                        convDiv.className = "conversation";
+                        
+                        let header = `Conversation`;
+                        if (conv.conversation_id || conv.id) {
+                            header += ` ID: ${conv.conversation_id || conv.id}`;
+                        }
+                        if (conv.created_at) {
+                            header += ` - ${new Date(conv.created_at).toLocaleString()}`;
+                        }
+                        
+                        convDiv.innerHTML = `
+                            <div class="conversation-header">${header}</div>
+                            <div class="conversation-summaries"></div>
+                        `;
+                        
+                        const summariesContainer = convDiv.querySelector(".conversation-summaries");
+                        
+                        conv.summaries.forEach(summary => {
+                            const summaryDiv = document.createElement("div");
+                            summaryDiv.className = "summary-item";
+                            summaryDiv.innerHTML = `
+                                <p><strong>Summary:</strong> ${summary.summary}</p>
+                                <p class="summary-text"><strong>Original:</strong> ${summary.text}</p>
+                                <p><small>${new Date(summary.timestamp).toLocaleString()}</small></p>
+                            `;
+                            summariesContainer.appendChild(summaryDiv);
+                        });
+                        
+                        summariesBox.appendChild(convDiv);
+                    });
+                    
+                    if (summariesBox.innerHTML === "") {
+                        summariesBox.innerHTML = `<div class="info-box">
+                            <p>No summaries found</p>
+                        </div>`;
+                    }
+                })
+                .catch(error => {
+                    summariesBox.innerHTML = `<div class="error-box">
+                        <p>Error loading summaries: ${error.message}</p>
+                    </div>`;
+                });
+        }
+
+        // Helper functions
+        function addMessage(container, sender, content) {
+            const messageDiv = document.createElement("div");
+            messageDiv.className = `message ${sender}-message`;
+            messageDiv.innerHTML = `<strong>${sender === 'user' ? 'You' : sender === 'bot' ? 'Assistant' : 'System'}:</strong> ${content}`;
+            container.appendChild(messageDiv);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function showError(container, message) {
+            const errorDiv = document.createElement("div");
+            errorDiv.className = "error-box";
+            errorDiv.textContent = message;
+            container.appendChild(errorDiv);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function callApi(endpoint, payload, container, responseType) {
+            fetch(endpoint, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => {
+                        let errorMsg = err.error || 'Request failed';
+                        if (err.debug) {
+                            errorMsg += `\nDebug: ${JSON.stringify(err.debug)}`;
+                        }
+                        throw new Error(errorMsg);
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                if (responseType === "summary") {
+                    container.innerHTML = `<div class="message bot-message">
+                        <strong>Summary:</strong> ${data.summary}
+                    </div>`;
+                } else {
+                    addMessage(container, "bot", data.response);
+                    // Update conversation ID if this was a new conversation
+                    if (data.conversation_id && !currentConversationId) {
+                        currentConversationId = data.conversation_id;
+                        document.getElementById('conversation-id-display').textContent = currentConversationId;
+                    }
+                }
+            })
+            .catch(error => {
+                showError(container, `API Error: ${error.message}`);
+                console.error("API Error:", error);
+            });
+        }
+
+        // Initialize with a new conversation
+        startNewConversation();
+    </script>
+</body>
+</html>
